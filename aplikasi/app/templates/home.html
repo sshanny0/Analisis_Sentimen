@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% block title %}<title>Analisis Sentimen</title>{% endblock %}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+</head>
+<body>
+  <div class="container-fluid">
+      {% block sidebar %}
+      <h2>Input Keyword</h2>
+      <form method="post" >
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="exampleInputEmail1" class="form-label">Searching Tweet</label>
+            <input type="text" class="form-control" id="inputKeyword" aria-describedby="textHelp" name="keyword">
+            <div id="textHelp" class="form-text">Put only one keyword</div>
+        </div>
+        <button type="submit" class="btn btn-primary" name="search" value="Search">Search</button>       
+    </form>
+     {% endblock %}
+      </div>
+      <div class="col-sm-10 ">{% block content %}{% endblock %}</div>
+    </div>
+  </div>
+</body>
+</html>
