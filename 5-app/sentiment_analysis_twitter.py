@@ -34,23 +34,30 @@ class SentimentAnalysis:
     def DownloadData(self,searchTerm, NoOfTerms):
         # authenticating
         print(searchTerm, NoOfTerms)
-        consumerKey='qubRP6d5B5eCD3RHrgoMRkDjH'
-        consumerSecret='AJlk1MiHfXqnhByWtCf1Mbi2T9WGW08hoLkkDIbks4ztUpFx99'
-        accessToken='3180202308-DmrgiSoxUUoSRevLLPldgCE57M0eD117K0mhFG5'
-        accessTokenSecret='fuY5Hkk838OnmGOZUb16KLkSDw3JZjflxXQ1NHP6pP9Jr'
-
-        auth = tweepy.OAuthHandler(consumerKey, consumerSecret)
-        auth.set_access_token(accessToken, accessTokenSecret)
-        api = tweepy.API(auth, wait_on_rate_limit = False)
+        client = tweepy.Client(consumer_key = "DUZVWmR3ufL1YhcloahR8Vihe",
+            consumer_secret = "qxrPCMYfzf898OGyzuRa1Aw5b44ibANhEAumaXbsZgn05saQWH",
+            access_token ="1333705882643775489-hBBZlViy8LtFj7Obx8q0s73hejYddm",
+            access_token_secret = "m9WiiHTzdSizlFocK5nxdEx3zQoeFBBLS0rDau1vglvNG",
+            bearer_token = "AAAAAAAAAAAAAAAAAAAAACRyXgEAAAAAQ%2F2fvclHvP2kqBDWNX6r03K1M9Y%3D6yyZ43tTYsbLvtSRdwboFX9owRgKkBPOPFvrtrbf0cAcpClVV5",
+            wait_on_rate_limit = False) 
 
         # input for term to be searched and how many tweets to search
         # searchTerm = input("Enter Keyword/Tag to search about: ")
         # NoOfTerms = int(input("Enter how many tweets to search: "))
 
         # searching for tweets
-        self.tweets = tweepy.Cursor(api.search_tweets, q=searchTerm, lang = "in").items(NoOfTerms)
-        users = [[tweet.created_at, tweet.text] for tweet in self.tweets]
-        df = pd.DataFrame(data=users, columns=['Created_At','Tweets'])
+        tweets = []
+        for tweet in tweepy.Paginator(client.search_recent_tweets,
+                                    query = searchTerm,                             
+                                    tweet_fields = ['author_id', 'created_at'],
+                                    max_results = 100).flatten(limit=NoOfTerms):
+            tweets.append(tweet)
+
+        result = []
+
+        for tweet in tweets:
+            result.append({'Created_At': tweet.created_at, 'Tweets': tweet.text})
+            df = pd.DataFrame(result)
 
         #Preprocessing
         def remove(tweet):
@@ -218,8 +225,9 @@ class SentimentAnalysis:
         df['Sentimen'] = SVM.predict(word_tfidf)
         df.to_csv('hasilnya.csv')
 
-        #DIAGRAM PIE
+        #PIE DIAGRAM
         df = pd.read_csv('hasilnya.csv')
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 10))
         def make_autopct(values):
             def my_autopct(pct):
                 total  = sum(values)
@@ -230,27 +238,21 @@ class SentimentAnalysis:
         labels = ['Positive', 'Negative', 'Neutral']
         colors = ['brown', 'lightcoral', 'beige']
         explode = [0.1, 0, 0]
-        plt.pie(sentimen, colors=colors, labels=labels, explode=explode, autopct=make_autopct(sentimen), shadow=True, startangle=90)
-        plt.legend(labels, loc="best")
-        plt.title('How people are reacting on "' + searchTerm + '" by analyzing ' + str(NoOfTerms) + ' Tweets.')
-        plt.axis('equal')
-        plt.tight_layout()
-        plt.savefig("static/fig.png")
-
+        ax1.pie(sentimen, colors=colors, labels=labels, explode=explode, autopct=make_autopct(sentimen), shadow=True, startangle=90)
+        ax1.legend(labels, loc="upper right")
+        ax1.set_title('How people are reacting on "' + searchTerm + '" by analyzing ' + str(NoOfTerms) + ' Tweets.')
         #CONFUSION MATRIX
-        fig, ax = plt.subplots(figsize=(5, 5))
-        ax.matshow(cm, cmap=plt.cm.Reds, alpha=0.3)
+        
+        ax2.matshow(cm, cmap=plt.cm.Reds, alpha=0.3)
         for i in range(cm.shape[0]):
             for j in range(cm.shape[1]):
-                ax.text(x=j, y=i,
+                ax2.text(x=j, y=i,
                     s=cm[i, j], 
                     va='center', ha='center')
-        plt.legend(labels, loc="best")
-        plt.title('Confusion Matrix on "' + searchTerm + '" by analyzing ' + str(NoOfTerms) + ' Tweets.')
-        plt.axis('equal')
-        plt.xlabel('Predicted Values', )
+        ax2.set_title('Confusion Matrix on "' + searchTerm + '" by analyzing ' + str(NoOfTerms) + ' Tweets.')
+        plt.xlabel('Predicted Values')
         plt.ylabel('Actual Values')
-        plt.savefig("static/matrix.png")
+        plt.savefig("static/fig.png")
 
 # if __name__== "__main__":
 #     sa = SentimentAnalysis()
